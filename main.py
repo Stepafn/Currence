@@ -47,61 +47,68 @@ class Currency:
         self.current_currency = None
         self.sleep = sleep
 
-    async def get_currency_price(self, logger):
+    async def get_currency_price(self) -> float:
         try:
-            full_page = await self.loop.run_in_executor(None, requests.get,
-                                                        self.currency_source, {
-                                                            'headers': self.headers})
-            full_page.raise_for_status()
 
+            full_page = await self.loop.run_in_executor(
+                None, requests.get,
+                self.currency_source,
+                {'headers': self.headers})
+            full_page.raise_for_status()
             soup = BeautifulSoup(full_page.content, 'html.parser')
             convert = soup.findAll("div", {"class": "valvalue"})
-            try:
-                if not convert:
-                    raise ValueError
-            except (requests.RequestException, ValueError) as ve:
-                logger.error("BeautifulSoup could not find an exchange "
-                             "rates!")
-                raise ve
-            try:
-                return float(convert[0].text.replace(',', '.'))
-            except AttributeError as ae:
-                logger.error("Exchange rates gotten by BeautifulSoup are "
-                             "inappropriate!")
-                raise ae
-        except (requests.RequestException, ValueError, AttributeError):
-            logger.error("Error when getting exchange rates!")
+            return float(convert[0].text.replace(',', '.'))
 
-    async def check_currency(self, logger):
+        except requests.RequestException:
+            raise
+        except ValueError:
+            raise
+        except IndexError:
+            raise
+
+    async def check_currency(self, logger) -> None:
         while self.start_flag:
             try:
-                new_currency = await self.get_currency_price(logger)
+                new_currency = await self.get_currency_price()
                 if new_currency is None:
-                    raise ValueError
+                    raise ValueError("The gathered element is NoneType")
                 if self.current_currency is None:
-                    logger.warning("Start! Current currency value: %f",
-                                   new_currency)
-                    self.current_currency = new_currency
+                    logger.warning(
+                        f"Start! Current currency value: {new_currency}")
                 elif new_currency > self.current_currency + self.tracking_point:
                     logger.warning(
-                        "The course has grown a lot! Current currency value: %f",
-                        new_currency)
-                    self.current_currency = new_currency
+                        f"The course has grown a lot! Current currency "
+                        f"value: {new_currency}")
                 elif new_currency < self.current_currency - self.tracking_point:
                     logger.warning(
-                        "The course has dropped a lot! Current currency value: %f",
-                        new_currency)
+                        f"The course has dropped a lot! Current currency "
+                        f"value: {new_currency}")
+                if self.current_currency != new_currency:
                     self.current_currency = new_currency
-                logger.info(f'{new_currency}')
+                logger.info(f'Current exchange rates value: {new_currency}')
                 await asyncio.sleep(self.sleep)
-            except (requests.RequestException, ValueError):
-                logger.error("Could not get currency from the source!")
-                break
+
+            except requests.RequestException as rre:
+                logger.exception(f"Couldn't to connect to web-source: {rre}")
+                raise
+            except ValueError as ve:
+                logger.exception(f"{ve}")
+                raise
+            except IndexError as ie:
+                logger.exception(f"{ie}")
+                raise
+            except asyncio.CancelledError as ace:
+                logger.exception(f"{ace}")
+                raise
 
 
 async def waiting_input():
     loop = asyncio.get_event_loop()
-    return await loop.run_in_executor(None, input, 'Enter command:\n')
+    return await loop.run_in_executor(
+        None,
+        input,
+        'Enter command:\n'
+        'Choose: Currency, Price, Exit\n')
 
 
 async def main():
@@ -122,28 +129,46 @@ async def main():
     currency_gather = Currency(used_args.currency_source,
                                used_args.headers, used_args.tracking_point,
                                used_args.sleep)
-    start = None
     temp = None
-    while True:
-        if start == "Currency":
-            currency_gather.start_flag = 1
-            temp = asyncio.gather(currency_gather.check_currency(logger))
-        elif start == 'Price':
-            logger.info(currency_gather.current_currency)
-        elif start == 'Exit':
-            currency_gather.start_flag = 0
-            try:
-                await temp
-            except Exception as e:
-                logger.error('Logging has not started: %s', e)
-            break
-        elif start:
+    run = True
+    while run:
+        try:
+            start = await waiting_input()
+            if start == "Currency":
+                if currency_gather.start_flag == 0:
+                    currency_gather.start_flag += 1
+                    temp = asyncio.gather(currency_gather.check_currency(logger))
+                    logger.warning("Type 'Exit' if you meet any errors")
+                else:
+                    logger.warning("The program has already started tracking currency exchange rates!")
+            elif start == 'Price':
+                if currency_gather.start_flag != 1:
+                    logger.warning("The program has not started tracking "
+                                   "currency exchange rates")
+                else:
+                    logger.info(currency_gather.current_currency)
+            elif start == 'Exit':
+                currency_gather.start_flag = 0
+                run = False
+                if temp is not None:
+                    await temp
+                logger.warning("The program has been stopped")
+            else:
+                logger.warning(
+                    'There is no such command\n'
+                    'List of commands:\n'
+                    'Currency - launch currency rate tracking and logging\n'
+                    'Price - current price value\n'
+                    'Exit - exit')
+        except requests.RequestException:
             pass
-        else:
-            logger.warning(
-                'There is no such command\nList of commands:\nCurrency - launch currency rate tracking and logging'
-                '\nPrice - current price value\nExit - exit')
-        start = await waiting_input()
+        except ValueError:
+            pass
+        except IndexError:
+            pass
+        except asyncio.CancelledError:
+            pass
+
 
 
 if __name__ == "__main__":
