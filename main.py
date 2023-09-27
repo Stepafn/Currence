@@ -88,17 +88,11 @@ class Currency:
                 logger.info(f'Current exchange rates value: {new_currency}')
                 await asyncio.sleep(self.sleep)
 
-            except requests.RequestException as rre:
-                logger.exception(f"Couldn't to connect to web-source: {rre}")
+            except (requests.RequestException, ValueError, IndexError) as e:
+                logger.exception(f"{e}")
                 raise
-            except ValueError as ve:
-                logger.exception(f"{ve}")
-                raise
-            except IndexError as ie:
-                logger.exception(f"{ie}")
-                raise
-            except asyncio.CancelledError as ace:
-                logger.exception(f"{ace}")
+            except asyncio.CancelledError:
+                logger.warning(f"The program has been stopped")
                 raise
 
 
@@ -162,13 +156,8 @@ async def main():
                         'List of commands:\n'
                         'Price - current price value\n'
                         'Exit - exit')
-        except requests.RequestException:
-            pass
-        except ValueError:
-            pass
-        except IndexError:
-            pass
-        except asyncio.CancelledError:
+        except (requests.RequestException, ValueError, IndexError,
+                asyncio.CancelledError):
             pass
 
 
