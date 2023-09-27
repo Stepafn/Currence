@@ -134,32 +134,34 @@ async def main():
     while run:
         try:
             start = await waiting_input()
-            if start == "Currency":
-                if currency_gather.start_flag == 0:
-                    currency_gather.start_flag += 1
-                    temp = asyncio.gather(currency_gather.check_currency(logger))
-                    logger.warning("Type 'Exit' if you meet any errors")
-                else:
-                    logger.warning("The program has already started tracking currency exchange rates!")
-            elif start == 'Price':
-                if currency_gather.start_flag != 1:
-                    logger.warning("The program has not started tracking "
-                                   "currency exchange rates")
-                else:
-                    logger.info(currency_gather.current_currency)
-            elif start == 'Exit':
-                currency_gather.start_flag = 0
-                run = False
-                if temp is not None:
+            match start:
+                case 'Currency':
+                    if currency_gather.start_flag == 0:
+                        currency_gather.start_flag = 1
+                        temp = asyncio.gather(
+                        currency_gather.check_currency(logger))
+                        logger.warning("Type 'Exit' if you meet any errors")
+                    else:
+                        logger.warning("The program has already started "
+                                       "tracking currency exchange rates!")
+                case 'Price':
+                    if currency_gather.start_flag == 0:
+                        logger.warning("The exchange rates tracking has not "
+                                       "been started")
+                    else:
+                        logger.info(f"Current exchange rates value: "
+                                    f" {currency_gather.current_currency}")
+                case 'Exit':
+                    currency_gather.start_flag = 0
+                    run = False
+                    if temp is not None:
                     await temp
-                logger.warning("The program has been stopped")
-            else:
-                logger.warning(
-                    'There is no such command\n'
-                    'List of commands:\n'
-                    'Currency - launch currency rate tracking and logging\n'
-                    'Price - current price value\n'
-                    'Exit - exit')
+                case _:
+                    logger.warning(
+                        'There is no such command\n'
+                        'List of commands:\n'
+                        'Price - current price value\n'
+                        'Exit - exit')
         except requests.RequestException:
             pass
         except ValueError:
