@@ -59,13 +59,9 @@ class Currency:
             convert = soup.findAll("div", {"class": "valvalue"})
             return float(convert[0].text.replace(',', '.'))
 
-        except requests.RequestException:
+        except (requests.RequestException, ValueError,  IndexError):
             raise
-        except ValueError:
-            raise
-        except IndexError:
-            raise
-
+            
     async def check_currency(self, logger) -> None:
         while self.start_flag:
             try:
@@ -89,10 +85,10 @@ class Currency:
                 await asyncio.sleep(self.sleep)
 
             except (requests.RequestException, ValueError, IndexError) as e:
-                logger.exception(f"{e}")
+                logger.exception(e)
                 raise
             except asyncio.CancelledError:
-                logger.warning(f"The program has been stopped")
+                logger.warning("The program has been stopped")
                 raise
 
 
