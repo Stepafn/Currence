@@ -125,27 +125,19 @@ async def main():
         try:
             start = await waiting_input()
             match start:
-                case 'Currency':
-                    if currency_gather.start_flag == 0:
-                        currency_gather.start_flag = 1
-                        temp = asyncio.gather(
-                        currency_gather.check_currency(logger))
-                        logger.warning("Type 'Exit' if you meet any errors")
-                    else:
-                        logger.warning("The program has already started "
-                                       "tracking currency exchange rates!")
                 case 'Price':
                     if currency_gather.start_flag == 0:
                         logger.warning("The exchange rates tracking has not "
                                        "been started")
                     else:
                         logger.info(f"Current exchange rates value: "
-                                    f" {currency_gather.current_currency}")
+                                    f"{currency_gather.current_currency}")
                 case 'Exit':
                     currency_gather.start_flag = 0
-                    run = False
                     if temp is not None:
-                    await temp
+                        # Force exit
+                        temp.cancel()
+                        await temp
                 case _:
                     logger.warning(
                         'There is no such command\n'
