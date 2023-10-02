@@ -1,7 +1,7 @@
 import asyncio
 import logging
-
 import requests
+from asyncio import Event
 from bs4 import BeautifulSoup
 
 
@@ -30,12 +30,12 @@ class Currency:
             The threshold for tracking currency changes.
         loop : AbstractEventLoop
             The event loop for running asynchronous tasks.
-        start_flag : int
-            The flag indicating if the currency tracking has started.
         current_currency : float
             The current currency price.
         sleep : int
             The time interval between currency checks.
+        data_is_ready : Event
+            Flag that will track if one iteration of currency checking is done.
 
     Methods
     -------
@@ -65,9 +65,9 @@ class Currency:
         self.headers = headers
         self.tracking_point = tracking_point
         self.loop = asyncio.get_event_loop()
-        self.start_flag = 0
-        self.current_currency = 0
+        self.current_currency = None
         self.sleep = sleep
+        self.data_is_ready = Event()
 
     async def get_currency_price(self) -> float:
         """
@@ -111,7 +111,7 @@ class Currency:
         :raises asyncio.CancelledError:
             If the program was stopped by user's interaction
         """
-        while self.start_flag:
+        while True:
             try:
                 new_currency = await self.get_currency_price()
                 if new_currency is None:
@@ -130,11 +130,14 @@ class Currency:
                 if self.current_currency != new_currency:
                     self.current_currency = new_currency
                 logger.info(f'Current exchange rates value: {new_currency}')
+                if not self.data_is_ready.is_set():
+                    self.data_is_ready.set()
                 await asyncio.sleep(self.sleep)
 
-            except (requests.RequestException, ValueError, IndexError) as e:
-                logger.exception(e)
-                raise
+            except (requests.RequestException, ValueError, IndexError):
+                logger.error("Some errors occurred when trying to get "
+                             "exchange rates... Solving the problem...")
+                await asyncio.sleep(self.sleep)
             except asyncio.CancelledError:
                 logger.warning("The program has been stopped")
                 raise
