@@ -25,7 +25,7 @@ async def main():
                                used_args.sleep)
 
     currency_tracking = asyncio.create_task(currency_gather.check_currency(logger))
-    logger.warning("Starting tracking currency exchange rates, please wait...")
+    logger.warning('Starting tracking currency exchange rates, please wait...')
     await currency_gather.data_is_ready.wait()
 
     while True:
