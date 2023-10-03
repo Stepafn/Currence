@@ -100,46 +100,46 @@ class Currency:
             raise
 
     async def check_currency(self, logger: logging.Logger) -> None:
-    """
-    Checks the currency price periodically and logs any changes.
+        """
+        Checks the currency price periodically and logs any changes.
 
-    :argument logger: Configured logger
-    :type logger: logger.Logger
+        :argument logger: Configured logger
+        :type logger: logger.Logger
 
-    :raises requests.RequestException, ValueError, IndexError:
-        If it was raised by `get_currency_price`
-    :raises asyncio.CancelledError:
-        If the program was stopped by user's interaction
-    """
-    while True:
-        try:
-            new_currency = await self.get_currency_price()
-            if new_currency is None:
-                raise ValueError("The gathered element is NoneType")
-            if self.current_currency is None:
-                logger.warning(
-                    f"Start! Current currency value: {new_currency}")
-            elif new_currency > self.current_currency + self.tracking_point:
-                logger.warning(
-                    f"The course has grown a lot! Current currency "
-                    f"value: {new_currency}")
-            elif new_currency < self.current_currency - self.tracking_point:
-                logger.warning(
-                    f"The course has dropped a lot! Current currency "
-                    f"value: {new_currency}")
-            if self.current_currency != new_currency:
-                self.current_currency = new_currency
-            logger.info(f'Current exchange rates value: {new_currency}')
-            if not self.data_is_ready.is_set():
-                self.data_is_ready.set()
+        :raises requests.RequestException, ValueError, IndexError:
+            If it was raised by `get_currency_price`
+        :raises asyncio.CancelledError:
+            If the program was stopped by user's interaction
+        """
+        while True:
+            try:
+                new_currency = await self.get_currency_price()
+                if new_currency is None:
+                    raise ValueError("The gathered element is NoneType")
+                if self.current_currency is None:
+                    logger.warning(
+                        f"Start! Current currency value: {new_currency}")
+                elif new_currency > self.current_currency + self.tracking_point:
+                    logger.warning(
+                        f"The course has grown a lot! Current currency "
+                        f"value: {new_currency}")
+                elif new_currency < self.current_currency - self.tracking_point:
+                    logger.warning(
+                        f"The course has dropped a lot! Current currency "
+                        f"value: {new_currency}")
+                if self.current_currency != new_currency:
+                    self.current_currency = new_currency
+                logger.info(f'Current exchange rates value: {new_currency}')
+                if not self.data_is_ready.is_set():
+                    self.data_is_ready.set()
 
-        except (requests.RequestException, ValueError, IndexError):
-            logger.error("Some errors occurred when trying to get "
-                         "exchange rates... Solving the problem...")
+            except (requests.RequestException, ValueError, IndexError):
+                logger.error("Some errors occurred when trying to get "
+                             "exchange rates... Solving the problem...")
 
-        except asyncio.CancelledError:
-            logger.warning("The program has been stopped")
-            raise
+            except asyncio.CancelledError:
+                logger.warning("The program has been stopped")
+                raise
 
-        finally:
-            await asyncio.sleep(self.sleep)
+            finally:
+                await asyncio.sleep(self.sleep)
