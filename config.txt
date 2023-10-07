@@ -1,4 +1,6 @@
 ; config.ini
+[bot]
+token = 6500524410:AAElwMSMO8zD72UHtqRh9OBPJnh4LCifkc8
 currency_source = 'http://www.finmarket.ru/currency/USD/'
 sleep = 3
 tracking_point = 0.5
