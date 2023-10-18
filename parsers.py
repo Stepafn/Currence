@@ -40,6 +40,8 @@ class ParseIni:
                                      "format": "%(asctime)s %(levelname)s %(message)s",
                                      "filename": "logger.log"},
                             help='Configuration parameters for logging')
+        parser.add_argument('--TOKEN', default='',
+                            help='Bot API token')
 
         args = parser.parse_args()
 
@@ -49,3 +51,5 @@ class ParseIni:
         self.tracking_point = float(args.tracking_point)
         self.headers = args.headers
         self.log_config = json.loads(args.log_config)
+        self.TOKEN = args.TOKEN
+
