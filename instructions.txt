@@ -1,0 +1,6 @@
+Действия для запуска бота:
+На хосте должен быть установлен docker
+В одной директории должны быть файлы: bot.py config.ini Dockerfile Logger.Log Logger.py parsers.py requirements.txt
+1. docker build -t bot.py .
+2. docker run -d -v $(pwd)/Logger.Log:/app/logger.log -v $(pwd)/config.ini:/app/config.ini bot.py (в случае линукса)
+docker run -d -v ${PWD}/Logger.Log:/app/logger.log -v ${PWD}/config.ini:/app/config.ini bot.py (в случае винды)
