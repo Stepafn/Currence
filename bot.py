@@ -33,7 +33,6 @@ if __name__ == '__main__':
     logger = get_logger(cfg.log_config.get('level'),
                         cfg.log_config.get('format'),
                         cfg.log_config.get('filename'))
-    token = cfg.token
-    bot = Bot(token)
+   bot = Bot(cfg.token)
 
     asyncio.run(main())
