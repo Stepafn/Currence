@@ -1,8 +1,12 @@
 import asyncio
+import os
+import json
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
-from parsers import ParseIni
 from logger import get_logger
+from dotenv import load_dotenv
+
+load_dotenv("config.env")
 
 dp = Dispatcher()
 
@@ -29,10 +33,10 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    cfg = ParseIni()
-    logger = get_logger(cfg.log_config.get('level'),
-                        cfg.log_config.get('format'),
-                        cfg.log_config.get('filename'))
-   bot = Bot(cfg.token)
-
+    log_cfg = json.loads(os.getenv('log_config'))
+    logger = get_logger(log_cfg.get('level'),
+                        log_cfg.get('format'),
+                        log_cfg.get('filename'))
+    bot = Bot(os.getenv('token'))
     asyncio.run(main())
+    
