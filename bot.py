@@ -1,14 +1,18 @@
 import asyncio
-import os
-import json
+import configargparse
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from logger import get_logger
-from dotenv import load_dotenv
-
-load_dotenv("config.env")
 
 dp = Dispatcher()
+
+parser = configargparse.ArgParser()
+parser.add_argument('--log-file', env_var='LOG_FILE', required=True, help='Log file')
+parser.add_argument('--log-level', env_var='LOG_LEVEL', default='INFO', help='Log level')
+parser.add_argument('--bot-token', env_var='BOT_TOKEN', required=True, help='bot token')
+parser.add_argument('--log-format', env_var='LOG_FORMAT', default='%(asctime)s %(levelname)s %(message)s')
+
+config = parser.parse_args()
 
 
 @dp.message(F.text == '/start')
@@ -33,10 +37,9 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    log_cfg = json.loads(os.getenv('log_config'))
-    logger = get_logger(log_cfg.get('level'),
-                        log_cfg.get('format'),
-                        log_cfg.get('filename'))
-    bot = Bot(os.getenv('token'))
+    logger = get_logger(config.log_level,
+                        config.log_format,
+                        config.log_file)
+
+    bot = Bot(config.bot_token)
     asyncio.run(main())
-    
