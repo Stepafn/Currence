@@ -1,0 +1,3 @@
+Running a bot with docker-compose:
+There should be files in one directory: bot.py, config.env, docker-compose.yml, Dockerfile, logger.log, logger.py, requirements.txt
+1 docker-compose up
