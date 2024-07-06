@@ -1,4 +1,4 @@
 Python version 3.11.3
-Перед тем как запускать скрипт, все положить в одну папку и нужно в терминале
-перейти в директорию этой папки и от туда запускать
-После в терминале прописать команду python main.py -c 'config.txt'
+Before running the script, put everything in one folder and need it in the terminal
+go to the directory of this folder and run from there
+Then enter the command python main.py -c 'config.txt' in the terminal
